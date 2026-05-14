@@ -1,0 +1,64 @@
+version: "3.8"
+
+services:
+  backend:
+    image: shivansh011/llm-graph-builder-backend:latest  # Using your Docker Hub image
+    container_name: backend
+    restart: always
+    environment:
+      - NEO4J_URI=${NEO4J_URI-neo4j+s://8e0b376e.databases.neo4j.io}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD-VDS0Qvn6LbPbEputjqoyFXDCG3FfECMOB3kl7YfItbk}
+      - NEO4J_USERNAME=${NEO4J_USERNAME-neo4j}
+      - OPENAI_API_KEY=${OPENAI_API_KEY-5cd328cc7bd94ca38257c3975fe85967}
+      - DIFFBOT_API_KEY=${DIFFBOT_API_KEY-}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL-all-MiniLM-L6-v2}
+      - LANGCHAIN_ENDPOINT=${LANGCHAIN_ENDPOINT-}
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2-}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT-}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY-}
+      - KNN_MIN_SCORE=${KNN_MIN_SCORE-0.94}
+      - IS_EMBEDDING=${IS_EMBEDDING-true}
+      - GEMINI_ENABLED=${GEMINI_ENABLED-False}
+      - GCP_LOG_METRICS_ENABLED=${GCP_LOG_METRICS_ENABLED-False}
+      - UPDATE_GRAPH_CHUNKS_PROCESSED=${UPDATE_GRAPH_CHUNKS_PROCESSED-20}
+      - NUMBER_OF_CHUNKS_TO_COMBINE=${NUMBER_OF_CHUNKS_TO_COMBINE-6}
+      - ENTITY_EMBEDDING=${ENTITY_EMBEDDING-False}
+      - GCS_FILE_CACHE=${GCS_FILE_CACHE-False}
+      - LLM_MODEL_CONFIG_ollama_llama3=${LLM_MODEL_CONFIG_ollama_llama3-}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - "8000:8000"
+    networks:
+      - net
+
+  frontend:
+    image: shivansh011/llm-graph-builder-frontend:latest  # Using your Docker Hub image
+    container_name: frontend
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      - VITE_BACKEND_API_URL=${VITE_BACKEND_API_URL-http://backend:8000}  # Use 'backend' as hostname inside Docker network
+      - VITE_REACT_APP_SOURCES=${VITE_REACT_APP_SOURCES-local,wiki,s3}
+      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID-}
+      - VITE_BLOOM_URL=${VITE_BLOOM_URL-https://workspace-preview.neo4j.io/workspace/explore?connectURL={CONNECT_URL}&search=Show+me+a+graph&featureGenAISuggestions=true&featureGenAISuggestionsInternal=true}
+      - VITE_TIME_PER_PAGE=${VITE_TIME_PER_PAGE-50}
+      - VITE_CHUNK_SIZE=${VITE_CHUNK_SIZE-5242880}
+      - VITE_LARGE_FILE_SIZE=${VITE_LARGE_FILE_SIZE-5242880}
+      - VITE_ENV=${VITE_ENV-DEV}
+      - VITE_CHAT_MODES=${VITE_CHAT_MODES-}
+      - VITE_BATCH_SIZE=${VITE_BATCH_SIZE-2}
+      - VITE_LLM_MODELS=${VITE_LLM_MODELS-}
+      - VITE_LLM_MODELS_PROD=${VITE_LLM_MODELS_PROD-openai_gpt_4o,openai_gpt_4o_mini,diffbot,gemini_1.5_flash}
+      - VITE_AUTH0_DOMAIN=${VITE_AUTH0_DOMAIN-}
+      - VITE_AUTH0_CLIENT_ID=${VITE_AUTH0_CLIENT_ID-}
+      - VITE_SKIP_AUTH=${VITE_SKIP_AUTH-true}
+      - DEPLOYMENT_ENV=local
+    ports:
+      - "8080:8080"
+    networks:
+      - net
+
+networks:
+  net:
